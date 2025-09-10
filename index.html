@@ -258,12 +258,6 @@
   }
 
 </style>
-
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icons/icon-180.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#0b0d10">
-
 </head>
 <body>
   <header>
@@ -304,23 +298,143 @@
   <script>
     // ========= PUNTO FIJO: HOTEL =========
     const HOME = {
-      name: "Chassé Hotel",
-      coords: [52.3669, 4.8547] // Ajusta si lo deseas
-    };
+  "name": "Chassé Hotel",
+  "coords": [
+    52.352046143963506,
+    4.925016840951675
+  ]
+};
 
     // ========= EVENTOS (mock) =========
     // Días: day1=Jueves, day2=Viernes, day3=Sábado, day4=Domingo
     const EVENTS = [
-      { id: "thu-1", name: "Opening – Gashouder", venue: "Gashouder", coords: [52.3869, 4.8739], day: "day1", time: "22:00", notes: "Opening party" },
-      { id: "thu-2", name: "After – Shelter", venue: "Shelter", coords: [52.3840, 4.9020], day: "day1", time: "03:00", notes: "After" },
-      { id: "fri-1", name: "Showcase – Paradiso", venue: "Paradiso", coords: [52.3620, 4.8837], day: "day2", time: "21:00", notes: "Showcase" },
-      { id: "fri-2", name: "After – De School (alt)", venue: "De School area", coords: [52.3724, 4.8468], day: "day2", time: "03:30", notes: "After" },
-      { id: "sat-1", name: "Main – Ziggo Dome", venue: "Ziggo Dome", coords: [52.3121, 4.9442], day: "day3", time: "22:30", notes: "Main event" },
-      { id: "sun-1", name: "Closing – Loft", venue: "A'DAM Toren (Loft)", coords: [52.3840, 4.9003], day: "day4", time: "18:00", notes: "Closing set" }
-    ];
+  {
+    "id": "day1-1",
+    "name": "Glitterbox — ADE",
+    "venue": "",
+    "coords": [
+      52.396723592819406,
+      4.8565205422674715
+    ],
+    "day": "day1",
+    "time": "16:00",
+    "end_time": "23:00",
+    "url": ""
+  },
+  {
+    "id": "day1-2",
+    "name": "Awakenings x Drumcode",
+    "venue": "",
+    "coords": [
+      52.38488969376688,
+      4.746322084658673
+    ],
+    "day": "day1",
+    "time": "23:00",
+    "end_time": "07:00",
+    "url": ""
+  },
+  {
+    "id": "day2-1",
+    "name": "Audio Obscura x Metamorfosi [Day]",
+    "venue": "",
+    "coords": [
+      52.328025401340405,
+      4.91859005582334
+    ],
+    "day": "day2",
+    "time": "14:00",
+    "end_time": "23:00",
+    "url": ""
+  },
+  {
+    "id": "day2-2",
+    "name": "elrow: Delusionville",
+    "venue": "",
+    "coords": [
+      52.38302274522527,
+      4.920533913494004
+    ],
+    "day": "day2",
+    "time": "23:00",
+    "end_time": "06:00",
+    "url": ""
+  },
+  {
+    "id": "day3-1",
+    "name": "Mystic Garden / Dockyard Festival",
+    "venue": "",
+    "coords": [
+      52.39256796609656,
+      4.770634028835332
+    ],
+    "day": "day3",
+    "time": "12:00",
+    "end_time": "23:00",
+    "url": ""
+  },
+  {
+    "id": "day4-1",
+    "name": "Audio Obscura @ The Loft [Sunset]",
+    "venue": "",
+    "coords": [
+      52.38389216507223,
+      4.902215508801694
+    ],
+    "day": "day4",
+    "time": "15:00",
+    "end_time": "22:00",
+    "url": ""
+  },
+  {
+    "id": "day4-2",
+    "name": "Madam invites MVSON",
+    "venue": "",
+    "coords": [
+      52.38389216507223,
+      4.902215508801694
+    ],
+    "day": "day4",
+    "time": "22:00",
+    "end_time": "05:00",
+    "url": ""
+  }
+];
 
     // ====== MAPA (B/N) ======
     const map = L.map('map', { zoomControl: true }).setView([52.3728, 4.8936], 12);
+const USER_GMAPS = {
+  "glitterbox — ade": "https://maps.app.goo.gl/jUH8Ev2VZwhzB8cZ6",
+  "awakenings x drumcode": "https://maps.app.goo.gl/7nRP5yEmDLDYKZGh8",
+  "audio obscura x metamorfosi [day]": "https://maps.app.goo.gl/qz7ERyVtaW4gxNEd6",
+  "elrow: delusionville": "https://maps.app.goo.gl/ziiDqtmHHA9dkqAV9",
+  "mystic garden / dockyard festival": "https://maps.app.goo.gl/1D5VRBHXr1SCr3Jo6",
+  "audio obscura @ the loft [sunset]": "https://maps.app.goo.gl/6ggsQhBQzB1JBc2Y7",
+  "madam invites mvson": "https://maps.app.goo.gl/6ggsQhBQzB1JBc2Y7"
+};
+
+
+    function buildQuery(ev){
+      const parts = [];
+      if (ev.venue) parts.push(ev.venue);
+      if (ev.name && !ev.name.toLowerCase().includes((ev.venue||'').toLowerCase())) parts.push(ev.name);
+      parts.push('Amsterdam');
+      return parts.filter(Boolean).join(', ');
+    }
+    const ORIGIN_Q = encodeURIComponent('Chassé Hotel, Amsterdam');
+
+const GMAPS_LINKS = {
+  "glitterbox": "https://maps.app.goo.gl/jUH8Ev2VZwhzB8cZ6",
+  "awakenings x drumcode": "https://maps.app.goo.gl/7nRP5yEmDLDYKZGh8",
+  "audioobscura x metamorfosi": "https://maps.app.goo.gl/qz7ERyVtaW4gxNEd6",
+  "audio obscura x metamorfosi": "https://maps.app.goo.gl/qz7ERyVtaW4gxNEd6",
+  "elrow": "https://maps.app.goo.gl/ziiDqtmHHA9dkqAV9",
+  "mystic / dockyard": "https://maps.app.goo.gl/1D5VRBHXr1SCr3Jo6",
+  "audioobscura x the loft": "https://maps.app.goo.gl/6ggsQhBQzB1JBc2Y7",
+  "audio obscura x the loft": "https://maps.app.goo.gl/6ggsQhBQzB1JBc2Y7",
+  "madam invites mvson": "https://maps.app.goo.gl/6ggsQhBQzB1JBc2Y7"
+};
+
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       maxZoom: 20,
       attribution: '&copy; OpenStreetMap &copy; CARTO'
@@ -431,7 +545,19 @@
         ${time ? `<div class="popup-meta">${time}</div>` : ''}
         <div class="popup-notes">${notes}</div>
       `;
-      layer.bindPopup(html);
+      
+      const gKey = (evOrHome.name || '').toLowerCase();
+      const gUrl = GMAPS_LINKS[gKey] || '';
+      const openLinks = isHome ? '' : `<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+          ${gUrl ? `<a href="${gUrl}" target="_blank" rel="noopener" style="background:#FFFF07;color:#000;padding:6px 10px;border-radius:8px;font-weight:900;text-decoration:none">Google Maps</a>` : ''}
+        </div>`;
+      
+      const destQ = encodeURIComponent(buildQuery(evOrHome));
+      const gmRoute = isHome ? '' : `<a href="https://www.google.com/maps/dir/?api=1&origin=${ORIGIN_Q}&destination=${destQ}" target="_blank" rel="noopener" style="background:#111;color:#fff;padding:6px 10px;border-radius:8px;text-decoration:none;border:1px solid #333">Ruta (Google)</a>`;
+      const amRoute = isHome ? '' : `<a href="http://maps.apple.com/?saddr=${ORIGIN_Q}&daddr=${destQ}" target="_blank" rel="noopener" style="background:#111;color:#fff;padding:6px 10px;border-radius:8px;text-decoration:none;border:1px solid #333">Ruta (Apple)</a>`;
+      layer.bindPopup(html + openLinks.replace('</div>', `${gmRoute} ${amRoute}</div>`));
+    
+
     }
 
     function addVenueMarker(ev) {
@@ -510,41 +636,36 @@
           const info = document.createElement('div');
           const title = document.createElement('p');
           title.className = 'v-title';
-          title.textContent = `${ev.name} — ${ev.venue}`;
+          title.textContent = `${ev.name}`;
           const meta = document.createElement('p');
           meta.className = 'v-time';
           meta.textContent = ev.notes || '';
 
           info.appendChild(title); info.appendChild(meta);
 
+          
+          
           const actions = document.createElement('div');
           actions.className = 'v-actions';
 
           const btnCenter = document.createElement('button');
           btnCenter.textContent = 'Ver en mapa';
-          btnCenter.onclick = () => {
-            map.setView(ev.coords, 14);
-            const m = markerRefs[ev.day].find(mm => mm.getLatLng().lat === ev.coords[0] && mm.getLatLng().lng === ev.coords[1]);
-            if (m) m.openPopup();
-          };
+          btnCenter.onclick = () => { map.setView(ev.coords, 14); };
 
-          const [lat, lng] = ev.coords;
-          const gmaps = document.createElement('a');
-          gmaps.href = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-          gmaps.target = '_blank'; gmaps.rel = 'noopener'; gmaps.textContent = 'Ruta';
+          const link = USER_GMAPS[(ev.name || '').toLowerCase()] || `https://www.google.com/maps/search/?api=1&query=${ev.coords[0]},${ev.coords[1]}`;
+          const btnRoute = document.createElement('a');
+          btnRoute.href = link;
+          btnRoute.target = '_blank'; btnRoute.rel = 'noopener'; btnRoute.textContent = 'Ruta';
 
-          actions.appendChild(btnCenter); actions.appendChild(gmaps);
+          actions.appendChild(btnCenter);
+          actions.appendChild(btnRoute);
 
-          wrap.appendChild(dot); wrap.appendChild(info); wrap.appendChild(actions);
-
-          wrap.onclick = (e) => {
-            if (e.target === btnCenter || e.target === gmaps) return;
-            map.setView(ev.coords, 14);
-            const m = markerRefs[ev.day].find(mm => mm.getLatLng().lat === ev.coords[0] && mm.getLatLng().lng === ev.coords[1]);
-            if (m) m.openPopup();
-          };
-
+          wrap.appendChild(dot); 
+          wrap.appendChild(info); 
+          wrap.appendChild(actions); 
           list.appendChild(wrap);
+
+
         });
       });
     }
@@ -632,14 +753,5 @@
     }
     fitAll('all');
   </script>
-
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./service-worker.js').catch(console.error);
-      });
-    }
-  </script>
-
 </body>
 </html>
