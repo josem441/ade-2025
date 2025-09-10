@@ -54,8 +54,10 @@ header{display:flex;align-items:center;gap:12px;padding:16px 16px 8px} h1{font-s
 
 .v-info{grid-area:title}
 .v-actions{grid-area:actions}
+.pop-coords{margin-top:6px;font-size:12px;opacity:.9}
 </style>
-  <link rel="manifest" href="manifest.json">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b0d10">
 </head>
 <body>
 <header><span class="badge-ade">ADE</span><h1>Mapa del mejor baile de nuestras vidas</h1></header>
@@ -86,6 +88,17 @@ const map = L.map('map', { zoomControl:true }).setView([52.3728, 4.8936], 12);
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {attribution:'&copy; OpenStreetMap & CARTO'}).addTo(map);
 
 const groups = {day1:L.layerGroup().addTo(map),day2:L.layerGroup().addTo(map),day3:L.layerGroup().addTo(map),day4:L.layerGroup().addTo(map)};
+// Add hotel marker (#1) to each day
+/* HOTEL_MARKERS */
+Object.keys(groups).forEach(day=>{
+  const hm = L.marker(HOME.coords, {icon:numberIcon(1, dayColors[day])}).addTo(groups[day]);
+  {let ev={name:'Casita',coords:HOME.coords,day};
+if(ev.name==='Casita'){
+  ev.routeLatLng=[52.352078838107424,4.924963179952577];
+}
+bindPopupWithStyle(hm, ev, 1, day);}
+});
+
 
 // --- helpers to separate overlapping markers (same lat/lng) ---
 function metersToDegreeLat(m){ return m / 111111; }
@@ -192,9 +205,12 @@ document.querySelectorAll('.filters button').forEach(btn=>{
 </script>
 
 <script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", ()=>{ navigator.serviceWorker.register("./service-worker.js"); });
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(console.error);
+  });
 }
 </script>
+
 </body>
 </html>
