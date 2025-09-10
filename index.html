@@ -1,757 +1,200 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mapa del mejor baile de nuestras vidas</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mapa del mejor baile de nuestras vidas — v8.4</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+:root{ --bg:#0b0d10; --panel:#14181d; --text:#e8edf2; --muted:#9aa4af; --ade:#FFFF07;
+       --day1:#F20544; --day2:#F205CB; --day3:#22CCF2; --day4:#A7F205; --border:#2b3138; }
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+header{display:flex;align-items:center;gap:12px;padding:16px 16px 8px} h1{font-size:22px;margin:0;font-weight:900}
+.badge-ade{background:var(--ade);color:#000;border-radius:10px;padding:4px 8px;font-weight:900}
+.app{display:grid;grid-template-columns:360px 1fr;gap:12px;padding:12px;height:calc(100vh - 70px)}
+.sidebar{background:var(--panel);border-radius:20px;padding:14px;overflow:auto;border:1px solid rgba(255,255,255,0.06)}
+.mapwrap{background:var(--panel);border-radius:16px;overflow:hidden;position:relative} #map{height:100%;width:100%}
+/* Filtros */
+.filters{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.filters .wide{grid-column:1/-1}
+.filters button{padding:10px 12px;border-radius:16px;border:2px solid #343c45;background:#0f1317;color:var(--text);font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px;justify-content:center}
+.filters button .sq{width:8px;height:8px;border-radius:3px;display:inline-block}
+.filters button.active{background:var(--ade);color:#000;border:2px solid #343c45;box-shadow:0 0 4px rgba(0,0,0,.4) inset}
+/* Lista */
+.legend{margin:14px 0 8px;display:flex;align-items:center;gap:8px;opacity:.9; background:#101418; border:1px solid rgba(255,255,255,0.06); padding:6px 10px; border-radius:12px; display:inline-flex}
+.legend .sq{width:10px;height:10px;border-radius:3px;display:inline-block}
+.venue{display:grid;grid-template-columns:72px 1fr;grid-template-rows:auto auto;grid-template-areas:'dot title' 'dot actions';gap:14px 16px;align-items:center;background:#0f1317;border:1px solid var(--border);border-radius:16px;padding:14px;margin:8px 0}
+.dot{grid-area:dot;width:60px;height:60px;border-radius:14px;background:#1b1f25;color:#c6cfda;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900}
+.dot div:first-child{font-size:18px;line-height:1} .v-title{margin:0;font-weight:900;font-size:18px;line-height:1.15;word-wrap:break-word;overflow-wrap:anywhere}
+.v-actions{margin-left:auto;display:flex;gap:10px} .v-actions a,.v-actions button{background:var(--ade);color:#000;padding:9px 14px;border-radius:14px;font-weight:900;text-decoration:none;border:none;cursor:pointer;white-space:nowrap;font-size:14px}
+/* Popup refinado (solo pop-up) */
+.leaflet-popup-content-wrapper{background:#0f1317;border:2px solid var(--ade);border-radius:16px;color:var(--text)}
+.leaflet-popup-content{margin:12px} .pop{min-width:300px; max-width:360px}
+.pop-head{display:flex;align-items:center;gap:10px;margin-bottom:2px} .pop-title{margin:0;font-size:18px;font-weight:800;line-height:1.2}
+.badge{display:inline-block;background:var(--ade);color:#000;font-weight:900;border-radius:10px;padding:4px 8px}
+.pop-day{font-size:12px;opacity:.9;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.pop-time{font-size:18px;font-weight:800;margin-top:4px}
+.pop-djs{margin-top:8px;font-size:12px;line-height:1.35;opacity:.95; max-height:140px; overflow:auto; padding-right:4px}
+.pop-actions{display:flex;gap:8px;margin-top:10px} .pop-actions .btn{background:var(--ade);color:#000;padding:6px 10px;border-radius:10px;font-weight:900;text-decoration:none}
+@media (max-width:980px){ .app{grid-template-columns:1fr; height:auto} .mapwrap{height:60vh} }
 
-  <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
-  />
+.venue-item .dot{grid-area:dot;grid-area:dot;width:64px;height:64px;border-radius:16px;background:#1b1f25;color:#c6cfda;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900}
+.venue-item .dot div:first-child{font-size:20px;line-height:1}
+.venue-item .v-body{grid-area:title;display:block}
+.venue-item .v-title{margin:0 0 6px 0;font-weight:900;font-size:20px;line-height:1.2;word-break:normal;overflow-wrap:break-word}
+.venue-item .v-actions{grid-area:actions;display:flex;gap:10px;flex-wrap:wrap}
+.venue-item .v-actions a,.venue-item .v-actions button{background:var(--ade);color:#000;padding:10px 18px;border-radius:24px;font-weight:900;text-decoration:none;border:none;cursor:pointer;white-space:nowrap}
+@media (max-width:980px){
+  .venue-item{grid-template-columns:64px 1fr;gap:12px 12px;padding:12px;border-radius:18px}
+  .venue-item .dot{grid-area:dot;width:58px;height:58px;border-radius:14px}
+  .venue-item .v-title{font-size:19px}
+  .venue-item .v-actions a,.venue-item .v-actions button{padding:10px 16px;border-radius:20px;font-size:15px}
+}
 
-  <style>
-    :root {
-      --bg: #0b0d10;
-      --panel: #111418;
-      --text: #e8edf2;
-      --muted: #9aa6b2;
-      --ade: #FFFF07; /* ADE yellow (for list UI) */
-      /* Day colors for map + chips */
-      --day1: #F20544; /* Jueves */
-      --day2: #F205CB; /* Viernes */
-      --day3: #22CCF2; /* Sábado */
-      --day4: #A7F205; /* Domingo */
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
-      height: 100vh;
-      display: grid;
-      grid-template-columns: 460px 1fr;
-      grid-template-rows: 64px 1fr;
-      grid-template-areas:
-        "header header"
-        "sidebar map";
-      gap: 10px;
-      padding: 10px;
-    }
-    header {
-      grid-area: header;
-      background: var(--panel);
-      border: 1px solid #20252b;
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 14px;
-      gap: 12px;
-    }
-    header h1 {
-      font-size: 18px;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      letter-spacing: .2px;
-    }
-    header h1 .tag {
-      background: var(--ade);
-      color: #000;
-      padding: 3px 8px;
-      border-radius: 10px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .6px;
-      font-size: 11px;
-    }
-    .controls { display: flex; gap: 8px; align-items: center; }
-    .controls button {
-      background: #0f1318;
-      color: var(--text);
-      border: 1px solid #242a31;
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    .controls button.primary {
-      background: var(--ade);
-      color: #000;
-      border-color: #000;
-      font-weight: 800;
-    }
-    aside {
-      grid-area: sidebar;
-      background: var(--panel);
-      border: 1px solid #20252b;
-      border-radius: 14px;
-      padding: 12px;
-      overflow-y: auto;
-      overflow-x: hidden;
-      display: grid;
-      grid-template-rows: auto auto 1fr auto;
-      gap: 10px;
-    }
-    #map {
-      grid-area: map;
-      border-radius: 14px;
-      border: 1px solid #20252b;
-      overflow: hidden;
-      min-height: 520px;
-    }
 
-    /* Filtros: 2 por fila */
-    .day-filters {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      align-items: stretch;
-    }
-    .chip {
-      --chip-color: var(--ade);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      background: #0f1318;
-      border: 2px solid #20252b;
-      padding: 12px 14px;
-      border-radius: 14px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      user-select: none;
-      text-transform: uppercase;
-      letter-spacing: .3px;
-    }
-    .chip .sq { width: 12px; height: 12px; border-radius: 3px; background: var(--chip-color); }
-    .chip[data-day="day1"]{ --chip-color: var(--day1); }
-    .chip[data-day="day2"]{ --chip-color: var(--day2); }
-    .chip[data-day="day3"]{ --chip-color: var(--day3); }
-    .chip[data-day="day4"]{ --chip-color: var(--day4); }
-    .chip.all { grid-column: span 2; --chip-color: var(--ade); }
-    .chip.active { border-color: var(--chip-color); box-shadow: 0 0 0 2px var(--chip-color) inset; }
-
-    .legend { display: flex; gap: 8px; flex-wrap: wrap; margin: 0; }
-    .legend .k {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: #0f1318; border: 1px solid #20252b;
-      padding: 6px 10px; border-radius: 10px; font-size: 12px;
-    }
-    .legend .sq { width: 12px; height: 12px; border-radius: 3px; background: var(--ade); }
-    .muted { color: var(--muted); font-size: 13px; }
-
-    /* LISTA (se mantiene en ADE amarillo) */
-    .venue {
-      display: grid;
-      grid-template-columns: 64px 1fr auto;
-      gap: 10px; align-items: center;
-      padding: 10px; border: 1px solid #1c2229;
-      border-radius: 12px; margin-bottom: 8px; background: #0f1318;
-    }
-    .dot {
-      width: 56px; height: 56px; border-radius: 12px;
-      display: grid; place-content: center;
-      font-weight: 800; font-size: 12px;
-      border: 2px solid #222933; color: var(--ade);
-      background: rgba(255, 255, 7, 0.12);
-      text-align: center; line-height: 1.1;
-    }
-    .v-title { font-weight: 800; margin: 0 0 2px 0; }
-    .v-time { color: var(--muted); font-size: 13px; margin: 0; }
-    .v-actions a, .v-actions button {
-      color: #000;
-      text-decoration: none;
-      background: var(--ade);
-      border: 1px solid #000;
-      padding: 8px 12px;
-      border-radius: 10px;
-      font-size: 13px;
-      cursor: pointer;
-      margin-left: 6px; font-weight: 800;
-    }
-
-    .help {
-      margin-top: 6px;
-      padding: 10px;
-      border-radius: 12px;
-      background: #0b0f13;
-      border: 1px dashed #2a323a;
-      font-size: 13px; line-height: 1.5;
-    }
-    .legs { margin: 8px 0 4px; padding-left: 8px; border-left: 2px solid #2a323a; }
-    .leg { font-size: 12px; color: var(--muted); margin: 4px 0; }
-
-    /* Popups estilizados */
-    .leaflet-popup-content-wrapper {
-      background: #101318;
-      color: var(--text);
-      border-radius: 14px;
-      border: 2px solid var(--ade);
-      box-shadow: 0 10px 24px rgba(0,0,0,.5);
-      font-size: 14px;
-    }
-    .leaflet-popup-content { margin: 16px 18px; }
-    .popup-head {
-      display: flex; align-items: center; gap: 10px;
-      font-weight: 900; font-size: 16px; margin-bottom: 6px;
-    }
-    .badge {
-      min-width: 28px; height: 28px; border-radius: 8px;
-      background: var(--ade); color: #000;
-      display: grid; place-content: center; font-weight: 900;
-    }
-    .popup-sub { font-style: italic; color: var(--muted); margin-bottom: 4px; }
-    .popup-meta { font-weight: 700; margin-bottom: 6px; }
-    .leaflet-popup-tip { background: #101318; border: 2px solid var(--ade); }
-
-    @media (max-width: 980px) {
-      body {
-        grid-template-columns: 1fr;
-        grid-template-rows: 64px 240px 1fr;
-        grid-template-areas:
-          "header"
-          "map"
-          "sidebar";
-      }
-      .day-filters { grid-template-columns: repeat(2, 1fr); }
-    }
-  
-  /* --- Mobile tuning to prevent map from covering day filters --- */
-  @media (max-width: 980px) {
-    body {
-      grid-template-columns: 1fr;
-      grid-template-rows: 64px minmax(220px, 42vh) 1fr;
-      grid-template-areas:
-        "header"
-        "map"
-        "sidebar";
-      padding-bottom: env(safe-area-inset-bottom);
-    }
-    #map {
-      min-height: 220px !important;
-      height: 42vh !important;
-    }
-    aside {
-      position: relative;
-      z-index: 0; /* below header, no overlap issues */
-    }
-    /* Make day filters sticky at top of sidebar on mobile */
-    .day-filters {
-      position: static;
-      top: 0;
-      z-index: 1;
-      padding-top: 6px;
-      padding-bottom: 8px;
-      background: linear-gradient(#111418 90%, rgba(17,20,24,0));
-      border-bottom: 1px solid #20252b;
-      margin-bottom: 8px;
-    }
-  }
-
+.v-info{grid-area:title}
+.v-actions{grid-area:actions}
 </style>
+  <link rel="manifest" href="manifest.json">
 </head>
 <body>
-  <header>
-    <h1><span class="tag">ADE</span> Mapa del mejor baile de nuestras vidas</h1>
-    <div class="controls">
-      <button id="locate" title="Centrar en mi ubicación">Mi ubicación</button>
-      <button id="reset" class="primary" title="Ver todo">Todo ADE</button>
+<header><span class="badge-ade">ADE</span><h1>Mapa del mejor baile de nuestras vidas</h1></header>
+<div class="app">
+  <aside class="sidebar">
+    <div class="filters">
+      <button class="wide active" data-filter="all">Todo ADE</button>
+      <button data-filter="day1"><span class="sq" style="background:var(--day1)"></span>Jueves</button>
+      <button data-filter="day2"><span class="sq" style="background:var(--day2)"></span>Viernes</button>
+      <button data-filter="day3"><span class="sq" style="background:var(--day3)"></span>Sábado</button>
+      <button data-filter="day4"><span class="sq" style="background:var(--day4)"></span>Domingo</button>
     </div>
-  </header>
-
-  <aside>
-    <div class="day-filters" id="dayFilters">
-      <div class="chip all active" data-day="all"><span class="sq"></span> Todo ADE</div>
-      <div class="chip" data-day="day1"><span class="sq"></span> Jueves</div>
-      <div class="chip" data-day="day2"><span class="sq"></span> Viernes</div>
-      <div class="chip" data-day="day3"><span class="sq"></span> Sábado</div>
-      <div class="chip" data-day="day4"><span class="sq"></span> Domingo</div>
-    </div>
-
     <div id="list"></div>
-
-    <div class="help">
-      <strong>Notas:</strong><br/>
-      • Colores por día solo en el <em>mapa</em> y en los <em>filtros</em>. La lista mantiene el amarillo ADE.<br/>
-      • Al elegir un día, los números de los marcadores se muestran un poco más grandes.
-    </div>
   </aside>
+  <section class="mapwrap"><div id="map"></div></section>
+</div>
 
-  <div id="map"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const HOME = {"name": "Chassé Hotel", "coords": [52.352046143963506, 4.925016840951675]};
+const EVENTS = [{"id": "day1-1", "name": "Glitterbox — ADE", "venue": "", "coords": [52.396723592819406, 4.8565205422674715], "day": "day1", "time": "16:00", "end_time": "23:00", "djs": "Cinthie (DE) / Dan Shake (GB) / DJ Holographic (US) / Eats Everything (GB) / Horse Meat Disco (GB) / Kirollus / Makèz (NL) / Melvo Baptiste (GB) / MiNNA (GB) / Mousse T. (DE) / O'Flynn (GB) / Seamus Haji (GB) / Tonno Disko (NL)"}, {"id": "day1-2", "name": "Awakenings x Drumcode", "venue": "", "coords": [52.38488969376688, 4.746322084658673], "day": "day1", "time": "23:00", "end_time": "07:00", "djs": "Adam Beyer (SE) / Bart Skils (NL) / Eli Brown (GB) / Enrico Sangiuliano (IT) / Linska / Marco Faraone (IT)"}, {"id": "day2-1", "name": "Audio Obscura x Metamorfosi [Day]", "venue": "", "coords": [52.328025401340405, 4.91859005582334], "day": "day2", "time": "14:00", "end_time": "23:00", "djs": "Anfisa Letyago (IT) / Ellen Allien (DE) / Joseph Capriati (IT) / KIDOO / Mau P (NL) / Simone Zino / Traumer (FR)"}, {"id": "day2-2", "name": "elrow: Delusionville", "venue": "", "coords": [52.38302274522527, 4.920533913494004], "day": "day2", "time": "23:00", "end_time": "06:00", "djs": "Bastian Bux (ES) / Chelina Manuhutu (NL) B2B Tini Gessler (ES) / Ilario Alicante (IT) / Kevin de Vries (DE) / Prunk (NL) B2B Fleur Shore (UK)"}, {"id": "day3-1", "name": "Mystic Garden / Dockyard Festival", "venue": "", "coords": [52.39256796609656, 4.770634028835332], "day": "day3", "time": "12:00", "end_time": "23:00", "djs": "Alarico (IT) / Amber Broos (BE) / ANNĒ / Bella Claxton (AU) / BIANKA (VE) / Bimini / Chlär (CH) / Chris Avantgarde (GB) / Dax J (GB) / DIØN (NL) / Eli Brown (GB) / Essy / Fafi Abdel Nour (NL) / HI-LO (NL) / Hujus / Jennifer Loveless (AU) / Joran van Pol (NL) / Juicy Romance (AU) / Kyra Khaldi (NL) / LB aka LABAT (FR) / Malugi (DE) / Moody Mehran (NL) / Narciss (DE) / Partiboi69 (AU) / Rayzir (NL) / SHDW / VE/RA / Young Marco (NL)"}, {"id": "day4-1", "name": "Audio Obscura @ The Loft [Sunset]", "venue": "", "coords": [52.38389216507223, 4.902215508801694], "day": "day4", "time": "15:00", "end_time": "22:00", "djs": "TBA"}, {"id": "day4-2", "name": "Madam invites MVSON", "venue": "", "coords": [52.38389216507223, 4.902215508801694], "day": "day4", "time": "22:00", "end_time": "05:00", "djs": "FLETCH (GB) / Mason Collective (GB) / Rayzir (NL)"}];
+const USER_GMAPS = {"glitterbox — ade": "https://maps.app.goo.gl/jUH8Ev2VZwhzB8cZ6", "awakenings x drumcode": "https://maps.app.goo.gl/7nRP5yEmDLDYKZGh8", "audio obscura x metamorfosi [day]": "https://maps.app.goo.gl/qz7ERyVtaW4gxNEd6", "elrow: delusionville": "https://maps.app.goo.gl/ziiDqtmHHA9dkqAV9", "mystic garden / dockyard festival": "https://maps.app.goo.gl/1D5VRBHXr1SCr3Jo6", "audio obscura @ the loft [sunset]": "https://maps.app.goo.gl/6ggsQhBQzB1JBc2Y7", "madam invites mvson": "https://maps.app.goo.gl/6ggsQhBQzB1JBc2Y7"};
+const dayColors = {day1:"var(--day1)", day2:"var(--day2)", day3:"var(--day3)", day4:"var(--day4)"};
+function dayLabel(k){return {"day1": "Jueves", "day2": "Viernes", "day3": "Sábado", "day4": "Domingo"}[k] || k;}
+function numberIcon(n, color){return L.divIcon({className:'',html:`<div style="background:rgba(0,0,0,.35);box-shadow:0 0 0 2px #000, 0 0 0 4px rgba(255,255,255,0.08);border:3px solid ${color};color:${color};width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:12px;font-weight:900">${n}</div>`,iconSize:[38,38],iconAnchor:[19,19],popupAnchor:[0,-14]});}
 
-  <!-- Leaflet JS -->
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
+const map = L.map('map', { zoomControl:true }).setView([52.3728, 4.8936], 12);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {attribution:'&copy; OpenStreetMap & CARTO'}).addTo(map);
 
-  <script>
-    // ========= PUNTO FIJO: HOTEL =========
-    const HOME = {
-  "name": "Chassé Hotel",
-  "coords": [
-    52.352046143963506,
-    4.925016840951675
-  ]
-};
+const groups = {day1:L.layerGroup().addTo(map),day2:L.layerGroup().addTo(map),day3:L.layerGroup().addTo(map),day4:L.layerGroup().addTo(map)};
 
-    // ========= EVENTOS (mock) =========
-    // Días: day1=Jueves, day2=Viernes, day3=Sábado, day4=Domingo
-    const EVENTS = [
-  {
-    "id": "day1-1",
-    "name": "Glitterbox — ADE",
-    "venue": "",
-    "coords": [
-      52.396723592819406,
-      4.8565205422674715
-    ],
-    "day": "day1",
-    "time": "16:00",
-    "end_time": "23:00",
-    "url": ""
-  },
-  {
-    "id": "day1-2",
-    "name": "Awakenings x Drumcode",
-    "venue": "",
-    "coords": [
-      52.38488969376688,
-      4.746322084658673
-    ],
-    "day": "day1",
-    "time": "23:00",
-    "end_time": "07:00",
-    "url": ""
-  },
-  {
-    "id": "day2-1",
-    "name": "Audio Obscura x Metamorfosi [Day]",
-    "venue": "",
-    "coords": [
-      52.328025401340405,
-      4.91859005582334
-    ],
-    "day": "day2",
-    "time": "14:00",
-    "end_time": "23:00",
-    "url": ""
-  },
-  {
-    "id": "day2-2",
-    "name": "elrow: Delusionville",
-    "venue": "",
-    "coords": [
-      52.38302274522527,
-      4.920533913494004
-    ],
-    "day": "day2",
-    "time": "23:00",
-    "end_time": "06:00",
-    "url": ""
-  },
-  {
-    "id": "day3-1",
-    "name": "Mystic Garden / Dockyard Festival",
-    "venue": "",
-    "coords": [
-      52.39256796609656,
-      4.770634028835332
-    ],
-    "day": "day3",
-    "time": "12:00",
-    "end_time": "23:00",
-    "url": ""
-  },
-  {
-    "id": "day4-1",
-    "name": "Audio Obscura @ The Loft [Sunset]",
-    "venue": "",
-    "coords": [
-      52.38389216507223,
-      4.902215508801694
-    ],
-    "day": "day4",
-    "time": "15:00",
-    "end_time": "22:00",
-    "url": ""
-  },
-  {
-    "id": "day4-2",
-    "name": "Madam invites MVSON",
-    "venue": "",
-    "coords": [
-      52.38389216507223,
-      4.902215508801694
-    ],
-    "day": "day4",
-    "time": "22:00",
-    "end_time": "05:00",
-    "url": ""
-  }
-];
-
-    // ====== MAPA (B/N) ======
-    const map = L.map('map', { zoomControl: true }).setView([52.3728, 4.8936], 12);
-const USER_GMAPS = {
-  "glitterbox — ade": "https://maps.app.goo.gl/jUH8Ev2VZwhzB8cZ6",
-  "awakenings x drumcode": "https://maps.app.goo.gl/7nRP5yEmDLDYKZGh8",
-  "audio obscura x metamorfosi [day]": "https://maps.app.goo.gl/qz7ERyVtaW4gxNEd6",
-  "elrow: delusionville": "https://maps.app.goo.gl/ziiDqtmHHA9dkqAV9",
-  "mystic garden / dockyard festival": "https://maps.app.goo.gl/1D5VRBHXr1SCr3Jo6",
-  "audio obscura @ the loft [sunset]": "https://maps.app.goo.gl/6ggsQhBQzB1JBc2Y7",
-  "madam invites mvson": "https://maps.app.goo.gl/6ggsQhBQzB1JBc2Y7"
-};
+// --- helpers to separate overlapping markers (same lat/lng) ---
+function metersToDegreeLat(m){ return m / 111111; }
+function metersToDegreeLng(m, lat){ return m / (111111 * Math.cos(lat * Math.PI/180)); }
+function offsetLatLng(latlng, angleDeg, radiusM){
+  const dLat = metersToDegreeLat(radiusM) * Math.sin(angleDeg * Math.PI/180);
+  const dLng = metersToDegreeLng(radiusM, latlng[0]) * Math.cos(angleDeg * Math.PI/180);
+  return [latlng[0] + dLat, latlng[1] + dLng];
+}
 
 
-    function buildQuery(ev){
-      const parts = [];
-      if (ev.venue) parts.push(ev.venue);
-      if (ev.name && !ev.name.toLowerCase().includes((ev.venue||'').toLowerCase())) parts.push(ev.name);
-      parts.push('Amsterdam');
-      return parts.filter(Boolean).join(', ');
-    }
-    const ORIGIN_Q = encodeURIComponent('Chassé Hotel, Amsterdam');
+// numeración por día (hotel = 1, eventos desde 2 según hora)
+const seqIndex = {};
+['day1','day2','day3','day4'].forEach(day => {
+  const dayEvents = EVENTS.filter(e=>e.day===day).sort((a,b)=>a.time.localeCompare(b.time));
+  let n=2; dayEvents.forEach(ev => { seqIndex[ev.id]=n++; });
+});
 
-const GMAPS_LINKS = {
-  "glitterbox": "https://maps.app.goo.gl/jUH8Ev2VZwhzB8cZ6",
-  "awakenings x drumcode": "https://maps.app.goo.gl/7nRP5yEmDLDYKZGh8",
-  "audioobscura x metamorfosi": "https://maps.app.goo.gl/qz7ERyVtaW4gxNEd6",
-  "audio obscura x metamorfosi": "https://maps.app.goo.gl/qz7ERyVtaW4gxNEd6",
-  "elrow": "https://maps.app.goo.gl/ziiDqtmHHA9dkqAV9",
-  "mystic / dockyard": "https://maps.app.goo.gl/1D5VRBHXr1SCr3Jo6",
-  "audioobscura x the loft": "https://maps.app.goo.gl/6ggsQhBQzB1JBc2Y7",
-  "audio obscura x the loft": "https://maps.app.goo.gl/6ggsQhBQzB1JBc2Y7",
-  "madam invites mvson": "https://maps.app.goo.gl/6ggsQhBQzB1JBc2Y7"
-};
+// hotel por día
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 20,
-      attribution: '&copy; OpenStreetMap &copy; CARTO'
-    }).addTo(map);
+Object.keys(groups).forEach(day=>{
+  const evs = EVENTS.filter(e=>e.day===day).sort((a,b)=>a.time.localeCompare(b.time));
+  if(!evs.length) return;
+  const coords = [HOME.coords];
 
-    // Colores por día para el MAPA
-    const dayColors = {
-      day1: getCss('--day1'),
-      day2: getCss('--day2'),
-      day3: getCss('--day3'),
-      day4: getCss('--day4')
-    };
+  // Group events by identical coordinates (rounded)
+  const sameSpot = {};
+  evs.forEach(ev=>{
+    const key = ev.coords[0].toFixed(6)+","+ev.coords[1].toFixed(6);
+    (sameSpot[key] ||= []).push(ev);
+  });
 
-    // Capas por día
-    const groups = {
-      day1: L.layerGroup().addTo(map),
-      day2: L.layerGroup().addTo(map),
-      day3: L.layerGroup().addTo(map),
-      day4: L.layerGroup().addTo(map)
-    };
+  evs.forEach(ev=>{
+    const key = ev.coords[0].toFixed(6)+","+ev.coords[1].toFixed(6);
+    const bucket = sameSpot[key];
+    let markerPos = ev.coords;
 
-    function getCss(varName) {
-      return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+    if (bucket && bucket.length > 1) {
+      // Spread evenly on a ring. For 2 items: 0° and 180°. Radius 32m.
+      const idx = bucket.findIndex(x=>x.id===ev.id);
+      const total = bucket.length;
+      const base = (total === 2) ? [0,180][idx] : (360/total)*idx;
+      markerPos = offsetLatLng(ev.coords, base, 32);
     }
 
-    // ====== UTILIDADES ======
-    function timeToMinutes(t) {
-      const [h, m] = t.split(':').map(Number);
-      return h * 60 + m;
-    }
-    function haversine(a, b) {
-      const toRad = (x) => x * Math.PI / 180;
-      const R = 6371; // km
-      const dLat = toRad(b[0] - a[0]);
-      const dLng = toRad(b[1] - a[1]);
-      const lat1 = toRad(a[0]);
-      const lat2 = toRad(b[0]);
-      const sinDLat = Math.sin(dLat/2);
-      const sinDLng = Math.sin(dLng/2);
-      const c = 2 * Math.asin(Math.sqrt(sinDLat*sinDLat + Math.cos(lat1)*Math.cos(lat2)*sinDLng*sinDLng));
-      return R * c;
-    }
-    function suggestMode(distanceKm, leaveMinutes) {
-      const hour = Math.floor(leaveMinutes/60) % 24;
-      const night = (hour >= 1 && hour <= 5);
-      let mode = 'walking';
-      if (distanceKm > 1.2 && distanceKm <= 4) mode = 'bicycling';
-      if (distanceKm > 4 && distanceKm <= 8) mode = night ? 'driving' : 'transit';
-      if (distanceKm > 8) mode = night ? 'driving' : 'transit';
-      return mode;
-    }
-    function estimateEta(distanceKm, mode) {
-      const speeds = { walking: 5, bicycling: 15, transit: 20, driving: 25 };
-      const mins = Math.round((distanceKm / (speeds[mode] || 5)) * 60);
-      return Math.max(mins, 3);
-    }
-    function modeLabel(mode) {
-      return {walking:'A pie', bicycling:'Bici', transit:'Transporte público', driving:'Taxi/Uber' }[mode] || mode;
-    }
+    const n = seqIndex[ev.id]||'?';
+    const m = L.marker(markerPos, {icon:numberIcon(n, dayColors[day]), riseOnHover:true}).addTo(groups[day]);
+    bindPopupWithStyle(m, ev, n, day);
+    coords.push(ev.coords); // use true coords for route
+  });
 
-    // ====== ENUMERACIÓN POR DÍA ======
-    const seqIndex = {};
-    ['day1','day2','day3','day4'].forEach(day => {
-      const dayEvents = EVENTS.filter(e => e.day === day).sort((a,b)=>timeToMinutes(a.time)-timeToMinutes(b.time));
-      let n = 2;
-      dayEvents.forEach(ev => { seqIndex[ev.id] = n++; });
+  coords.push(HOME.coords);
+  L.polyline(coords, {color:dayColors[day], weight:4, opacity:.95}).addTo(groups[day]);
+});
+
+
+// === POPUP (solo cambio de layout) ===
+function bindPopupWithStyle(layer, evOrHome, n, dayKey) {
+  const wrap = document.createElement('div'); wrap.className='pop';
+  const head = document.createElement('div'); head.className='pop-head';
+  head.innerHTML = `<span class="badge">${n}</span><h1 class="pop-title">${evOrHome.name || ''}</h1>`; wrap.appendChild(head);
+  const dayLine = document.createElement('div'); dayLine.className='pop-day'; dayLine.textContent = evOrHome.day ? dayLabel(evOrHome.day) : ''; wrap.appendChild(dayLine);
+  const timeLine = document.createElement('div'); timeLine.className='pop-time'; const start=evOrHome.time||''; const end = evOrHome.end_time ? ` – ${evOrHome.end_time}` : ''; timeLine.textContent = `${start}${end}`; wrap.appendChild(timeLine);
+  if (evOrHome.djs) { const d=document.createElement('div'); d.className='pop-djs'; d.textContent=evOrHome.djs; wrap.appendChild(d);}
+  const actions = document.createElement('div'); actions.className='pop-actions';
+  if (evOrHome.name) { const key=(evOrHome.name||'').toLowerCase(); const link = USER_GMAPS[key] || (evOrHome.coords ? `https://www.google.com/maps/dir/?api=1&origin=${HOME.coords[0]},${HOME.coords[1]}&destination=${evOrHome.coords[0]},${evOrHome.coords[1]}` : '#'); const a=document.createElement('a'); a.href=link; a.target='_blank'; a.rel='noopener'; a.className='btn'; a.textContent='Ruta'; actions.appendChild(a);}
+  wrap.appendChild(actions); layer.bindPopup(wrap);
+}
+
+// === Lista lateral (dos botones, uno centra y otro abre tu link exacto) ===
+const list = document.getElementById('list');
+function renderList(filter='all') {
+  list.innerHTML='';
+  const days = filter==='all' ? ['day1','day2','day3','day4'] : [filter];
+  days.forEach(day=>{
+    const evs = EVENTS.filter(e=>e.day===day).sort((a,b)=>a.time.localeCompare(b.time));
+    if(!evs.length) return;
+    const head = document.createElement('div'); head.className='legend';
+    head.innerHTML = `<span class="sq" style="background:${dayColors[day]}"></span> <strong>${dayLabel(day)}` + `</strong>`; list.appendChild(head);
+    evs.forEach(ev=>{
+      const wrap = document.createElement('div'); wrap.className='venue'; wrap.dataset.id=ev.id;
+      const dot = document.createElement('div'); dot.className='dot'; dot.innerHTML=`<div>${seqIndex[ev.id]||'-'}</div><div>${ev.time||'--:--'}` + `</div>`;
+      const info = document.createElement('div'); info.className='v-info'; const title = document.createElement('p'); title.className='v-title'; title.textContent = ev.name; info.appendChild(title);
+      const actions = document.createElement('div'); actions.className='v-actions';
+      const b1=document.createElement('button'); b1.textContent='Ver en mapa'; b1.onclick=()=>map.setView(ev.coords,14);
+      const b2=document.createElement('a'); b2.textContent='Ruta'; b2.target='_blank'; b2.rel='noopener'; const key=ev.name.toLowerCase(); b2.href = USER_GMAPS[key] || `https://www.google.com/maps/dir/?api=1&origin=${HOME.coords[0]},${HOME.coords[1]}&destination=${ev.coords[0]},${ev.coords[1]}`;
+      actions.appendChild(b1); actions.appendChild(b2);
+      wrap.appendChild(dot); wrap.appendChild(info); wrap.appendChild(actions); list.appendChild(wrap);
     });
+  });
+}
+renderList('all');
 
-    // ====== MARCADORES NUMERADOS (DivIcon) ======
-    const markerRefs = { day1: [], day2: [], day3: [], day4: [] };
-    function numberIcon(n, color, size=34) {
-      const html = `
-        <div style="
-          position: relative;
-          width: ${size}px; height: ${size}px;
-          border-radius: 10px;
-          background: ${hexToRgba(color, 0.18)};
-          border: 2px solid ${color};
-          display: grid; place-content: center;
-          color: ${color}; font-weight: 900; font-size: ${Math.round(size*0.44)}px;
-          line-height: 1; text-shadow: 0 1px 2px rgba(0,0,0,.6);
-          box-shadow: 0 6px 16px rgba(0,0,0,.45);
-        ">${n}</div>`;
-      return L.divIcon({ className: "num-icon", html, iconSize: [size,size], iconAnchor: [size/2,size/2], popupAnchor: [0,-12] });
-    }
-    function hexToRgba(hex, a) {
-      const h = hex.replace('#','');
-      const bigint = parseInt(h, 16);
-      const r = (bigint >> 16) & 255;
-      const g = (bigint >> 8) & 255;
-      const b = bigint & 255;
-      return `rgba(${r},${g},${b},${a})`;
-    }
+// Filtros
+document.querySelectorAll('.filters button').forEach(btn=>{
+  btn.addEventListener('click',()=>{ 
+    document.querySelectorAll('.filters button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const f = btn.getAttribute('data-filter');
+    renderList(f);
+    Object.keys(groups).forEach(k=>{ if (f==='all' || k===f) groups[k].addTo(map); else map.removeLayer(groups[k]); });
+  });
+});
+</script>
 
-    function bindPopupWithStyle(layer, evOrHome, badgeNum, dayKey) {
-      const dName = {day1:'JUEVES', day2:'VIERNES', day3:'SÁBADO', day4:'DOMINGO'}[dayKey] || '';
-      const isHome = !!evOrHome.isHome;
-      const title = isHome ? evOrHome.name : evOrHome.name;
-      const venue = isHome ? 'Punto base' : `<em>${evOrHome.venue}</em>`;
-      const time = isHome ? '' : `${evOrHome.time} · ${dName}`;
-      const notes = isHome ? 'Salida y llegada' : (evOrHome.notes || '');
-      const html = `
-        <div class="popup-head">
-          <div class="badge">${badgeNum}</div>
-          <div>${title}</div>
-        </div>
-        <div class="popup-sub">${venue}</div>
-        ${time ? `<div class="popup-meta">${time}</div>` : ''}
-        <div class="popup-notes">${notes}</div>
-      `;
-      
-      const gKey = (evOrHome.name || '').toLowerCase();
-      const gUrl = GMAPS_LINKS[gKey] || '';
-      const openLinks = isHome ? '' : `<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
-          ${gUrl ? `<a href="${gUrl}" target="_blank" rel="noopener" style="background:#FFFF07;color:#000;padding:6px 10px;border-radius:8px;font-weight:900;text-decoration:none">Google Maps</a>` : ''}
-        </div>`;
-      
-      const destQ = encodeURIComponent(buildQuery(evOrHome));
-      const gmRoute = isHome ? '' : `<a href="https://www.google.com/maps/dir/?api=1&origin=${ORIGIN_Q}&destination=${destQ}" target="_blank" rel="noopener" style="background:#111;color:#fff;padding:6px 10px;border-radius:8px;text-decoration:none;border:1px solid #333">Ruta (Google)</a>`;
-      const amRoute = isHome ? '' : `<a href="http://maps.apple.com/?saddr=${ORIGIN_Q}&daddr=${destQ}" target="_blank" rel="noopener" style="background:#111;color:#fff;padding:6px 10px;border-radius:8px;text-decoration:none;border:1px solid #333">Ruta (Apple)</a>`;
-      layer.bindPopup(html + openLinks.replace('</div>', `${gmRoute} ${amRoute}</div>`));
-    
-
-    }
-
-    function addVenueMarker(ev) {
-      const n = seqIndex[ev.id] || '?';
-      const color = dayColors[ev.day];
-      const marker = L.marker(ev.coords, { icon: numberIcon(n, color) }).addTo(groups[ev.day]);
-      bindPopupWithStyle(marker, ev, n, ev.day);
-      markerRefs[ev.day].push(marker);
-      return marker;
-    }
-
-    // Add markers
-    EVENTS.forEach(addVenueMarker);
-
-    // Hotel marker (1) por día con color del día
-    const homeMarkers = {};
-    Object.keys(groups).forEach(day => {
-      const hm = L.marker(HOME.coords, { icon: numberIcon(1, dayColors[day]) }).addTo(groups[day]);
-      bindPopupWithStyle(hm, { ...HOME, isHome: true }, 1, day);
-      homeMarkers[day] = hm;
-    });
-
-    // ===== RUTAS POR DÍA: HOTEL -> eventos -> HOTEL (color del día) =====
-    const polylines = {};
-    function buildDayRoute(day) {
-      const dayEvents = EVENTS.filter(e => e.day === day).sort((a,b)=>timeToMinutes(a.time)-timeToMinutes(b.time));
-      if (dayEvents.length === 0) return null;
-      const coords = [HOME.coords, ...dayEvents.map(e => e.coords), HOME.coords];
-      if (polylines[day]) { map.removeLayer(polylines[day]); }
-      const line = L.polyline(coords, { color: dayColors[day], weight: 4, opacity: 0.95 }).addTo(groups[day]);
-      polylines[day] = line;
-      return line;
-    }
-    Object.keys(groups).forEach(buildDayRoute);
-
-    // ===== LISTA + LEGS (ETAs) (lista permanece en ADE) =====
-    const list = document.getElementById('list');
-    function renderList(filter = 'all') {
-      list.innerHTML = '';
-      const daysOrder = ['day1','day2','day3','day4'];
-      const targetDays = filter === 'all' ? daysOrder : [filter];
-
-      targetDays.forEach(day => {
-        const dayEvents = EVENTS.filter(e => e.day === day).sort((a,b)=>timeToMinutes(a.time)-timeToMinutes(b.time));
-        if (dayEvents.length === 0) return;
-
-        const head = document.createElement('div');
-        head.className = 'legend';
-        head.innerHTML = `<span class="k"><span class="sq"></span> ${day==='day1'?'Jueves':day==='day2'?'Viernes':day==='day3'?'Sábado':'Domingo'}</span>`;
-        list.appendChild(head);
-
-        const legsWrap = document.createElement('div');
-        legsWrap.className = 'legs';
-        const seq = [ {name: HOME.name, coords: HOME.coords, time: null, seq: 1}, ...dayEvents.map(e=>({...e, seq: seqIndex[e.id]})), {name: HOME.name, coords: HOME.coords, time: null, seq: (dayEvents.length + 2)} ];
-        for (let i=0; i<seq.length-1; i++) {
-          const A = seq[i]; const B = seq[i+1];
-          const departMinutes = (dayEvents[i]?.time) ? timeToMinutes(dayEvents[i].time) : (dayEvents[0]?.time ? Math.max(timeToMinutes(dayEvents[0].time)-60, 18*60) : 18*60);
-          const dist = haversine(A.coords, B.coords);
-          const mode = suggestMode(dist, departMinutes);
-          const eta = estimateEta(dist, mode);
-          const leg = document.createElement('div');
-          leg.className = 'leg';
-          leg.textContent = `• ${A.seq}. ${A.name} → ${B.seq}. ${B.name}: ${eta} min · ${modeLabel(mode)} · ${dist.toFixed(1)} km`;
-          legsWrap.appendChild(leg);
-        }
-        list.appendChild(legsWrap);
-
-        dayEvents.forEach(ev => {
-          const wrap = document.createElement('div');
-          wrap.className = 'venue'; wrap.dataset.id = ev.id;
-
-          const dot = document.createElement('div');
-          dot.className = 'dot';
-          dot.innerHTML = `<div>${seqIndex[ev.id] || '-'}</div><div>${ev.time}</div>`;
-
-          const info = document.createElement('div');
-          const title = document.createElement('p');
-          title.className = 'v-title';
-          title.textContent = `${ev.name}`;
-          const meta = document.createElement('p');
-          meta.className = 'v-time';
-          meta.textContent = ev.notes || '';
-
-          info.appendChild(title); info.appendChild(meta);
-
-          
-          
-          const actions = document.createElement('div');
-          actions.className = 'v-actions';
-
-          const btnCenter = document.createElement('button');
-          btnCenter.textContent = 'Ver en mapa';
-          btnCenter.onclick = () => { map.setView(ev.coords, 14); };
-
-          const link = USER_GMAPS[(ev.name || '').toLowerCase()] || `https://www.google.com/maps/search/?api=1&query=${ev.coords[0]},${ev.coords[1]}`;
-          const btnRoute = document.createElement('a');
-          btnRoute.href = link;
-          btnRoute.target = '_blank'; btnRoute.rel = 'noopener'; btnRoute.textContent = 'Ruta';
-
-          actions.appendChild(btnCenter);
-          actions.appendChild(btnRoute);
-
-          wrap.appendChild(dot); 
-          wrap.appendChild(info); 
-          wrap.appendChild(actions); 
-          list.appendChild(wrap);
-
-
-        });
-      });
-    }
-    renderList('all');
-
-    // ====== FILTROS EN SIDEBAR ======
-    const dayFilters = document.getElementById('dayFilters');
-    function setFilter(day) {
-      // Activar chips
-      Array.from(dayFilters.children).forEach(ch => ch.classList.remove('active'));
-      const active = Array.from(dayFilters.children).find(ch => ch.dataset.day === day) || dayFilters.querySelector('.all');
-      (active || dayFilters.querySelector('.all')).classList.add('active');
-
-      // Mostrar/ocultar capas por día
-      Object.keys(groups).forEach(k => {
-        if (day === 'all' || day === k) {
-          map.addLayer(groups[k]);
-          if (!polylines[k]) buildDayRoute(k);
-        } else {
-          map.removeLayer(groups[k]);
-        }
-      });
-
-      // Ajustar tamaño de números (más grandes si un solo día)
-      const sizeActive = (day !== 'all') ? 40 : 34;
-      Object.keys(markerRefs).forEach(k => {
-        const size = (day === 'all' || day !== k) ? 34 : sizeActive;
-        // Hotel
-        const hm = homeMarkers[k];
-        if (hm) hm.setIcon(numberIcon(1, dayColors[k], size));
-        // Eventos
-        const dayMarkers = markerRefs[k];
-        const dayEvents = EVENTS.filter(e => e.day === k).sort((a,b)=>timeToMinutes(a.time)-timeToMinutes(b.time));
-        dayMarkers.forEach((m, idx) => {
-          const n = idx + 2; // 2..n
-          m.setIcon(numberIcon(n, dayColors[k], size));
-        });
-      });
-
-      renderList(day);
-      fitAll(day);
-    }
-    dayFilters.addEventListener('click', (e) => {
-      const chip = e.target.closest('.chip');
-      if (!chip) return;
-      const day = chip.dataset.day || 'all';
-      setFilter(day);
-    });
-
-    // Botones del header
-    document.getElementById('reset').addEventListener('click', () => setFilter('all'));
-    document.getElementById('locate').addEventListener('click', () => {
-      if (!navigator.geolocation) { alert('Geolocalización no soportada.'); return; }
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const { latitude, longitude } = pos.coords;
-          L.circleMarker([latitude, longitude], {
-            radius: 8, color: '#fff', weight: 2, fillColor: '#fff', fillOpacity: 0.2
-          }).addTo(map).bindPopup('<strong>Estás aquí</strong>').openPopup();
-          map.setView([latitude, longitude], 14);
-        },
-        () => alert('No se pudo obtener la ubicación.')
-      );
-    });
-
-    // Ajustar vista
-    function fitAll(filter = 'all') {
-      const points = [];
-      if (filter === 'all') {
-        Object.values(groups).forEach(g => g.eachLayer(l => {
-          if (l.getLatLng) points.push(l.getLatLng());
-          if (l.getLatLngs) points.push(...l.getLatLngs());
-        }));
-        points.push(L.latLng(HOME.coords[0], HOME.coords[1]));
-      } else {
-        groups[filter].eachLayer(l => {
-          if (l.getLatLng) points.push(l.getLatLng());
-          if (l.getLatLngs) points.push(...l.getLatLngs());
-        });
-        points.push(L.latLng(HOME.coords[0], HOME.coords[1]));
-      }
-      if (!points.length) return;
-      const bounds = L.latLngBounds(points);
-      map.fitBounds(bounds, { padding: [30, 30] });
-    }
-    fitAll('all');
-  </script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", ()=>{ navigator.serviceWorker.register("./service-worker.js"); });
+}
+</script>
 </body>
 </html>

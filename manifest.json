@@ -1,14 +1,14 @@
 {
-  "name": "ADE Map – Mapa del mejor baile",
-  "short_name": "ADE Map",
-  "start_url": ".",
+  "name": "Mapa ADE 2025",
+  "short_name": "ADE 2025",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0b0d10",
-  "theme_color": "#0b0d10",
+  "theme_color": "#FFFF07",
   "icons": [
     {
-      "src": "icons/icon-180.png",
-      "sizes": "180x180",
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
       "type": "image/png"
     },
     {
