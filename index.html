@@ -11,6 +11,10 @@
 *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
 header{display:flex;align-items:center;gap:12px;padding:16px 16px 8px} h1{font-size:22px;margin:0;font-weight:900}
 .badge-ade{background:var(--ade);color:#000;border-radius:10px;padding:4px 8px;font-weight:900}
+.logo{display:flex;align-items:center}
+.logo img{display:none;height:40px;width:auto}
+.logo.img-ready img{display:block}
+.logo.img-ready .badge-ade{display:none}
 .app{display:grid;grid-template-columns:360px 1fr;gap:12px;padding:12px;height:calc(100vh - 70px)}
 .sidebar{background:var(--panel);border-radius:20px;padding:14px;overflow:auto;border:1px solid rgba(255,255,255,0.06)}
 .mapwrap{background:var(--panel);border-radius:16px;overflow:hidden;position:relative} #map{height:100%;width:100%}
@@ -60,7 +64,7 @@ header{display:flex;align-items:center;gap:12px;padding:16px 16px 8px} h1{font-s
 <meta name="theme-color" content="#0b0d10">
 </head>
 <body>
-<header><span class="badge-ade">ADE</span><h1>Mapa del mejor baile de nuestras vidas</h1></header>
+<header><div class="logo" id="logo"><span class="badge-ade">ADE</span><img src="icons/ade-logo.png" alt="ADE Logo" onload="document.getElementById('logo').classList.add('img-ready')"></div><h1>Mapa del mejor baile de nuestras vidas</h1></header>
 <div class="app">
   <aside class="sidebar">
     <div class="filters">
@@ -203,14 +207,6 @@ document.querySelectorAll('.filters button').forEach(btn=>{
   });
 });
 </script>
-
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js').catch(console.error);
-  });
-}
-</script>
-
+<script>if('serviceWorker'in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./service-worker.js').catch(console.error);});}</script>
 </body>
 </html>
