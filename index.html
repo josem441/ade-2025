@@ -96,7 +96,7 @@ const groups = {day1:L.layerGroup().addTo(map),day2:L.layerGroup().addTo(map),da
 /* HOTEL_MARKERS */
 Object.keys(groups).forEach(day=>{
   const hm = L.marker(HOME.coords, {icon:numberIcon(1, dayColors[day])}).addTo(groups[day]);
-  {let ev={name:'Casita',coords:HOME.coords,day};
+  {let ev={name:'Casita - Hotel Washington',coords:HOME.coords,day};
 if(ev.name==='Casita'){
   ev.routeLatLng=[52.35501662782993,4.88354917967537];
 }
