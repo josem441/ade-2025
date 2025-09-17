@@ -81,7 +81,7 @@ header{display:flex;align-items:center;gap:12px;padding:16px 16px 8px} h1{font-s
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const HOME = {"name": "Casita - Hotel Washington", "coords": [52.35501662782993,4.88354917967537]};
+const HOME = {"name": "Casita - Hotel Ibis Amsterdam Centre", "coords": [52.37976705245729, 4.897127737256558]};
 const EVENTS = [{"id": "day1-1", "name": "Glitterbox — ADE", "venue": "", "coords": [52.396723592819406, 4.8565205422674715], "day": "day1", "time": "16:00", "end_time": "23:00", "djs": "Cinthie (DE) / Dan Shake (GB) / DJ Holographic (US) / Eats Everything (GB) / Horse Meat Disco (GB) / Kirollus / Makèz (NL) / Melvo Baptiste (GB) / MiNNA (GB) / Mousse T. (DE) / O'Flynn (GB) / Seamus Haji (GB) / Tonno Disko (NL)"}, {"id": "day1-2", "name": "Awakenings x Drumcode", "venue": "", "coords": [52.38488969376688, 4.746322084658673], "day": "day1", "time": "23:00", "end_time": "07:00", "djs": "Adam Beyer (SE) / Bart Skils (NL) / Eli Brown (GB) / Enrico Sangiuliano (IT) / Linska / Marco Faraone (IT)"}, {"id": "day2-1", "name": "Audio Obscura x Metamorfosi [Day]", "venue": "", "coords": [52.328025401340405, 4.91859005582334], "day": "day2", "time": "14:00", "end_time": "23:00", "djs": "Anfisa Letyago (IT) / Ellen Allien (DE) / Joseph Capriati (IT) / KIDOO / Mau P (NL) / Simone Zino / Traumer (FR)"}, {"id": "day2-2", "name": "elrow: Delusionville", "venue": "", "coords": [52.38302274522527, 4.920533913494004], "day": "day2", "time": "23:00", "end_time": "06:00", "djs": "Bastian Bux (ES) / Chelina Manuhutu (NL) B2B Tini Gessler (ES) / Ilario Alicante (IT) / Kevin de Vries (DE) / Prunk (NL) B2B Fleur Shore (UK)"}, {"id": "day3-1", "name": "Mystic Garden / Dockyard Festival", "venue": "", "coords": [52.39256796609656, 4.770634028835332], "day": "day3", "time": "12:00", "end_time": "23:00", "djs": "Alarico (IT) / Amber Broos (BE) / ANNĒ / Bella Claxton (AU) / BIANKA (VE) / Bimini / Chlär (CH) / Chris Avantgarde (GB) / Dax J (GB) / DIØN (NL) / Eli Brown (GB) / Essy / Fafi Abdel Nour (NL) / HI-LO (NL) / Hujus / Jennifer Loveless (AU) / Joran van Pol (NL) / Juicy Romance (AU) / Kyra Khaldi (NL) / LB aka LABAT (FR) / Malugi (DE) / Moody Mehran (NL) / Narciss (DE) / Partiboi69 (AU) / Rayzir (NL) / SHDW / VE/RA / Young Marco (NL)"}, {"id": "day4-1", "name": "Audio Obscura @ The Loft [Sunset]", "venue": "", "coords": [52.38389216507223, 4.902215508801694], "day": "day4", "time": "15:00", "end_time": "22:00", "djs": "TBA"}, {"id": "day4-2", "name": "Madam invites MVSON", "venue": "", "coords": [52.38389216507223, 4.902215508801694], "day": "day4", "time": "22:00", "end_time": "05:00", "djs": "FLETCH (GB) / Mason Collective (GB) / Rayzir (NL)"}];
 const USER_GMAPS = {"glitterbox — ade": "https://maps.app.goo.gl/jUH8Ev2VZwhzB8cZ6", "awakenings x drumcode": "https://maps.app.goo.gl/7nRP5yEmDLDYKZGh8", "audio obscura x metamorfosi [day]": "https://maps.app.goo.gl/qz7ERyVtaW4gxNEd6", "elrow: delusionville": "https://maps.app.goo.gl/ziiDqtmHHA9dkqAV9", "mystic garden / dockyard festival": "https://maps.app.goo.gl/1D5VRBHXr1SCr3Jo6", "audio obscura @ the loft [sunset]": "https://maps.app.goo.gl/6ggsQhBQzB1JBc2Y7", "madam invites mvson": "https://maps.app.goo.gl/6ggsQhBQzB1JBc2Y7"};
 const dayColors = {day1:"var(--day1)", day2:"var(--day2)", day3:"var(--day3)", day4:"var(--day4)"};
@@ -96,9 +96,9 @@ const groups = {day1:L.layerGroup().addTo(map),day2:L.layerGroup().addTo(map),da
 /* HOTEL_MARKERS */
 Object.keys(groups).forEach(day=>{
   const hm = L.marker(HOME.coords, {icon:numberIcon(1, dayColors[day])}).addTo(groups[day]);
-  {let ev={name:'Casita - Hotel Washington',coords:HOME.coords,day};
+  {let ev={name:'Casita - Hotel Ibis Amsterdam Centre',coords:HOME.coords,day};
 if(ev.name==='Casita'){
-  ev.routeLatLng=[52.35501662782993,4.88354917967537];
+  ev.routeLatLng=[52.37976705245729, 4.897127737256558];
 }
 bindPopupWithStyle(hm, ev, 1, day);}
 });
